@@ -63,31 +63,27 @@ public class RubotoActivity extends android.app.Activity {
   public static final int CB_RESTART = 29;
   public static final int CB_RESTORE_INSTANCE_STATE = 30;
   public static final int CB_RESUME = 31;
-  public static final int CB_SAVE_INSTANCE_STATE = 32;
-  public static final int CB_SEARCH_REQUESTED = 33;
-  public static final int CB_START = 34;
-  public static final int CB_STOP = 35;
-  public static final int CB_TITLE_CHANGED = 36;
-  public static final int CB_TOUCH_EVENT = 37;
-  public static final int CB_TRACKBALL_EVENT = 38;
-  public static final int CB_WINDOW_ATTRIBUTES_CHANGED = 39;
-  public static final int CB_WINDOW_FOCUS_CHANGED = 40;
-  public static final int CB_USER_INTERACTION = 41;
-  public static final int CB_USER_LEAVE_HINT = 42;
-  public static final int CB_ATTACHED_TO_WINDOW = 43;
-  public static final int CB_BACK_PRESSED = 44;
-  public static final int CB_DETACHED_FROM_WINDOW = 45;
-  public static final int CB_KEY_LONG_PRESS = 46;
-  public static final int CB_ACTION_MODE_FINISHED = 47;
-  public static final int CB_ACTION_MODE_STARTED = 48;
-  public static final int CB_ATTACH_FRAGMENT = 49;
-  public static final int CB_KEY_SHORTCUT = 50;
-  public static final int CB_WINDOW_STARTING_ACTION_MODE = 51;
-  public static final int CB_GENERIC_MOTION_EVENT = 52;
-  public static final int CB_TRIM_MEMORY = 53;
-  public static final int CB_APPLY_THEME_RESOURCE = 54;
+  public static final int CB_RETAIN_NON_CONFIGURATION_INSTANCE = 32;
+  public static final int CB_SAVE_INSTANCE_STATE = 33;
+  public static final int CB_SEARCH_REQUESTED = 34;
+  public static final int CB_START = 35;
+  public static final int CB_STOP = 36;
+  public static final int CB_TITLE_CHANGED = 37;
+  public static final int CB_TOUCH_EVENT = 38;
+  public static final int CB_TRACKBALL_EVENT = 39;
+  public static final int CB_WINDOW_ATTRIBUTES_CHANGED = 40;
+  public static final int CB_WINDOW_FOCUS_CHANGED = 41;
+  public static final int CB_USER_INTERACTION = 42;
+  public static final int CB_USER_LEAVE_HINT = 43;
+  public static final int CB_ATTACHED_TO_WINDOW = 44;
+  public static final int CB_BACK_PRESSED = 45;
+  public static final int CB_DETACHED_FROM_WINDOW = 46;
+  public static final int CB_KEY_LONG_PRESS = 47;
+  public static final int CB_CREATE_DIALOG = 48;
+  public static final int CB_PREPARE_DIALOG = 49;
+  public static final int CB_APPLY_THEME_RESOURCE = 50;
 
-    private Object[] callbackProcs = new Object[56];
+    private Object[] callbackProcs = new Object[51];
 
     public void setCallbackProc(int id, Object obj) {
         callbackProcs[id] = obj;
@@ -796,6 +792,25 @@ public class RubotoActivity extends android.app.Activity {
     }
   }
 
+  public java.lang.Object onRetainNonConfigurationInstance() {
+    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_retain_non_configuration_instance"}, Boolean.class)) {
+      super.onRetainNonConfigurationInstance();
+      return (java.lang.Object) JRubyAdapter.callMethod(rubyInstance, "on_retain_non_configuration_instance" , java.lang.Object.class);
+    } else {
+      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onRetainNonConfigurationInstance"}, Boolean.class)) {
+        super.onRetainNonConfigurationInstance();
+        return (java.lang.Object) JRubyAdapter.callMethod(rubyInstance, "onRetainNonConfigurationInstance" , java.lang.Object.class);
+      } else {
+        if (callbackProcs != null && callbackProcs[CB_RETAIN_NON_CONFIGURATION_INSTANCE] != null) {
+          super.onRetainNonConfigurationInstance();
+          return (java.lang.Object) JRubyAdapter.callMethod(callbackProcs[CB_RETAIN_NON_CONFIGURATION_INSTANCE], "call" , java.lang.Object.class);
+        } else {
+          return super.onRetainNonConfigurationInstance();
+        }
+      }
+    }
+  }
+
   public void onSaveInstanceState(android.os.Bundle outState) {
     if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_save_instance_state"}, Boolean.class)) {
       super.onSaveInstanceState(outState);
@@ -1081,153 +1096,39 @@ public class RubotoActivity extends android.app.Activity {
     }
   }
 
-  public void onActionModeFinished(android.view.ActionMode mode) {
-    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_action_mode_finished"}, Boolean.class)) {
-      super.onActionModeFinished(mode);
-      JRubyAdapter.callMethod(rubyInstance, "on_action_mode_finished" , mode);
+  public android.app.Dialog onCreateDialog(int id, android.os.Bundle args) {
+    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_create_dialog"}, Boolean.class)) {
+      super.onCreateDialog(id, args);
+      return (android.app.Dialog) JRubyAdapter.callMethod(rubyInstance, "on_create_dialog" , new Object[]{id, args}, android.app.Dialog.class);
     } else {
-      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onActionModeFinished"}, Boolean.class)) {
-        super.onActionModeFinished(mode);
-        JRubyAdapter.callMethod(rubyInstance, "onActionModeFinished" , mode);
+      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onCreateDialog"}, Boolean.class)) {
+        super.onCreateDialog(id, args);
+        return (android.app.Dialog) JRubyAdapter.callMethod(rubyInstance, "onCreateDialog" , new Object[]{id, args}, android.app.Dialog.class);
       } else {
-        if (callbackProcs != null && callbackProcs[CB_ACTION_MODE_FINISHED] != null) {
-          super.onActionModeFinished(mode);
-          JRubyAdapter.callMethod(callbackProcs[CB_ACTION_MODE_FINISHED], "call" , mode);
+        if (callbackProcs != null && callbackProcs[CB_CREATE_DIALOG] != null) {
+          super.onCreateDialog(id, args);
+          return (android.app.Dialog) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_DIALOG], "call" , new Object[]{id, args}, android.app.Dialog.class);
         } else {
-          super.onActionModeFinished(mode);
+          return super.onCreateDialog(id, args);
         }
       }
     }
   }
 
-  public void onActionModeStarted(android.view.ActionMode mode) {
-    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_action_mode_started"}, Boolean.class)) {
-      super.onActionModeStarted(mode);
-      JRubyAdapter.callMethod(rubyInstance, "on_action_mode_started" , mode);
+  public void onPrepareDialog(int id, android.app.Dialog dialog, android.os.Bundle args) {
+    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_prepare_dialog"}, Boolean.class)) {
+      super.onPrepareDialog(id, dialog, args);
+      JRubyAdapter.callMethod(rubyInstance, "on_prepare_dialog" , new Object[]{id, dialog, args});
     } else {
-      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onActionModeStarted"}, Boolean.class)) {
-        super.onActionModeStarted(mode);
-        JRubyAdapter.callMethod(rubyInstance, "onActionModeStarted" , mode);
+      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onPrepareDialog"}, Boolean.class)) {
+        super.onPrepareDialog(id, dialog, args);
+        JRubyAdapter.callMethod(rubyInstance, "onPrepareDialog" , new Object[]{id, dialog, args});
       } else {
-        if (callbackProcs != null && callbackProcs[CB_ACTION_MODE_STARTED] != null) {
-          super.onActionModeStarted(mode);
-          JRubyAdapter.callMethod(callbackProcs[CB_ACTION_MODE_STARTED], "call" , mode);
+        if (callbackProcs != null && callbackProcs[CB_PREPARE_DIALOG] != null) {
+          super.onPrepareDialog(id, dialog, args);
+          JRubyAdapter.callMethod(callbackProcs[CB_PREPARE_DIALOG], "call" , new Object[]{id, dialog, args});
         } else {
-          super.onActionModeStarted(mode);
-        }
-      }
-    }
-  }
-
-  public void onAttachFragment(android.app.Fragment fragment) {
-    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_attach_fragment"}, Boolean.class)) {
-      super.onAttachFragment(fragment);
-      JRubyAdapter.callMethod(rubyInstance, "on_attach_fragment" , fragment);
-    } else {
-      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onAttachFragment"}, Boolean.class)) {
-        super.onAttachFragment(fragment);
-        JRubyAdapter.callMethod(rubyInstance, "onAttachFragment" , fragment);
-      } else {
-        if (callbackProcs != null && callbackProcs[CB_ATTACH_FRAGMENT] != null) {
-          super.onAttachFragment(fragment);
-          JRubyAdapter.callMethod(callbackProcs[CB_ATTACH_FRAGMENT], "call" , fragment);
-        } else {
-          super.onAttachFragment(fragment);
-        }
-      }
-    }
-  }
-
-  public android.view.View onCreateView(android.view.View parent, java.lang.String name, android.content.Context context, android.util.AttributeSet attrs) {
-    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_create_view"}, Boolean.class)) {
-      super.onCreateView(parent, name, context, attrs);
-      return (android.view.View) JRubyAdapter.callMethod(rubyInstance, "on_create_view" , new Object[]{parent, name, context, attrs}, android.view.View.class);
-    } else {
-      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onCreateView"}, Boolean.class)) {
-        super.onCreateView(parent, name, context, attrs);
-        return (android.view.View) JRubyAdapter.callMethod(rubyInstance, "onCreateView" , new Object[]{parent, name, context, attrs}, android.view.View.class);
-      } else {
-        if (callbackProcs != null && callbackProcs[CB_CREATE_VIEW] != null) {
-          super.onCreateView(parent, name, context, attrs);
-          return (android.view.View) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_VIEW], "call" , new Object[]{parent, name, context, attrs}, android.view.View.class);
-        } else {
-          return super.onCreateView(parent, name, context, attrs);
-        }
-      }
-    }
-  }
-
-  public boolean onKeyShortcut(int keyCode, android.view.KeyEvent event) {
-    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_key_shortcut"}, Boolean.class)) {
-      super.onKeyShortcut(keyCode, event);
-      return (Boolean) JRubyAdapter.callMethod(rubyInstance, "on_key_shortcut" , new Object[]{keyCode, event}, Boolean.class);
-    } else {
-      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onKeyShortcut"}, Boolean.class)) {
-        super.onKeyShortcut(keyCode, event);
-        return (Boolean) JRubyAdapter.callMethod(rubyInstance, "onKeyShortcut" , new Object[]{keyCode, event}, Boolean.class);
-      } else {
-        if (callbackProcs != null && callbackProcs[CB_KEY_SHORTCUT] != null) {
-          super.onKeyShortcut(keyCode, event);
-          return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_KEY_SHORTCUT], "call" , new Object[]{keyCode, event}, Boolean.class);
-        } else {
-          return super.onKeyShortcut(keyCode, event);
-        }
-      }
-    }
-  }
-
-  public android.view.ActionMode onWindowStartingActionMode(android.view.ActionMode.Callback callback) {
-    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_window_starting_action_mode"}, Boolean.class)) {
-      super.onWindowStartingActionMode(callback);
-      return (android.view.ActionMode) JRubyAdapter.callMethod(rubyInstance, "on_window_starting_action_mode" , callback, android.view.ActionMode.class);
-    } else {
-      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onWindowStartingActionMode"}, Boolean.class)) {
-        super.onWindowStartingActionMode(callback);
-        return (android.view.ActionMode) JRubyAdapter.callMethod(rubyInstance, "onWindowStartingActionMode" , callback, android.view.ActionMode.class);
-      } else {
-        if (callbackProcs != null && callbackProcs[CB_WINDOW_STARTING_ACTION_MODE] != null) {
-          super.onWindowStartingActionMode(callback);
-          return (android.view.ActionMode) JRubyAdapter.callMethod(callbackProcs[CB_WINDOW_STARTING_ACTION_MODE], "call" , callback, android.view.ActionMode.class);
-        } else {
-          return super.onWindowStartingActionMode(callback);
-        }
-      }
-    }
-  }
-
-  public boolean onGenericMotionEvent(android.view.MotionEvent event) {
-    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_generic_motion_event"}, Boolean.class)) {
-      super.onGenericMotionEvent(event);
-      return (Boolean) JRubyAdapter.callMethod(rubyInstance, "on_generic_motion_event" , event, Boolean.class);
-    } else {
-      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onGenericMotionEvent"}, Boolean.class)) {
-        super.onGenericMotionEvent(event);
-        return (Boolean) JRubyAdapter.callMethod(rubyInstance, "onGenericMotionEvent" , event, Boolean.class);
-      } else {
-        if (callbackProcs != null && callbackProcs[CB_GENERIC_MOTION_EVENT] != null) {
-          super.onGenericMotionEvent(event);
-          return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_GENERIC_MOTION_EVENT], "call" , event, Boolean.class);
-        } else {
-          return super.onGenericMotionEvent(event);
-        }
-      }
-    }
-  }
-
-  public void onTrimMemory(int arg0) {
-    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_trim_memory"}, Boolean.class)) {
-      super.onTrimMemory(arg0);
-      JRubyAdapter.callMethod(rubyInstance, "on_trim_memory" , arg0);
-    } else {
-      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onTrimMemory"}, Boolean.class)) {
-        super.onTrimMemory(arg0);
-        JRubyAdapter.callMethod(rubyInstance, "onTrimMemory" , arg0);
-      } else {
-        if (callbackProcs != null && callbackProcs[CB_TRIM_MEMORY] != null) {
-          super.onTrimMemory(arg0);
-          JRubyAdapter.callMethod(callbackProcs[CB_TRIM_MEMORY], "call" , arg0);
-        } else {
-          super.onTrimMemory(arg0);
+          super.onPrepareDialog(id, dialog, args);
         }
       }
     }

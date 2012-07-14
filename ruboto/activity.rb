@@ -15,7 +15,6 @@
 
 require 'ruboto/base'
 require 'ruboto/package'
-java_import 'android.util.Log'
 
 #######################################################
 #
@@ -32,11 +31,8 @@ java_import 'android.util.Log'
 module Ruboto
   module Context
     def initialize_ruboto()
-      Log.i "RUBOTO", "new context global was #{$new_context_global.inspect}"
-      $new_context_global = "$activity" unless $new_context_global
       eval("#{$new_context_global} = self")
       $new_context_global = nil
-      Log.i "RUBOTO", "then, new context global was #{$new_context_global.inspect}"
 
       instance_eval &$context_init_block if $context_init_block
       $context_init_block = nil
@@ -69,8 +65,7 @@ module Ruboto
         on_create nil
       end
   
-# CHANGED from stock ruboto
-      nil
+      self
     end
   end
 end

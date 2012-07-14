@@ -32,10 +32,8 @@ public class RubotoService extends android.app.Service {
   public static final int CB_REBIND = 4;
   public static final int CB_UNBIND = 5;
   public static final int CB_START_COMMAND = 6;
-  public static final int CB_TASK_REMOVED = 7;
-  public static final int CB_TRIM_MEMORY = 8;
 
-  private Object[] callbackProcs = new Object[9];
+  private Object[] callbackProcs = new Object[7];
 
   public void setCallbackProc(int id, Object obj) {
     callbackProcs[id] = obj;
@@ -221,44 +219,6 @@ public class RubotoService extends android.app.Service {
           return (Integer) JRubyAdapter.callMethod(callbackProcs[CB_START_COMMAND], "call" , new Object[]{intent, flags, startId}, Integer.class);
         } else {
           return super.onStartCommand(intent, flags, startId);
-        }
-      }
-    }
-  }
-
-  public void onTaskRemoved(android.content.Intent arg0) {
-    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_task_removed"}, Boolean.class)) {
-      super.onTaskRemoved(arg0);
-      JRubyAdapter.callMethod(rubyInstance, "on_task_removed" , arg0);
-    } else {
-      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onTaskRemoved"}, Boolean.class)) {
-        super.onTaskRemoved(arg0);
-        JRubyAdapter.callMethod(rubyInstance, "onTaskRemoved" , arg0);
-      } else {
-        if (callbackProcs != null && callbackProcs[CB_TASK_REMOVED] != null) {
-          super.onTaskRemoved(arg0);
-          JRubyAdapter.callMethod(callbackProcs[CB_TASK_REMOVED], "call" , arg0);
-        } else {
-          super.onTaskRemoved(arg0);
-        }
-      }
-    }
-  }
-
-  public void onTrimMemory(int arg0) {
-    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_trim_memory"}, Boolean.class)) {
-      super.onTrimMemory(arg0);
-      JRubyAdapter.callMethod(rubyInstance, "on_trim_memory" , arg0);
-    } else {
-      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onTrimMemory"}, Boolean.class)) {
-        super.onTrimMemory(arg0);
-        JRubyAdapter.callMethod(rubyInstance, "onTrimMemory" , arg0);
-      } else {
-        if (callbackProcs != null && callbackProcs[CB_TRIM_MEMORY] != null) {
-          super.onTrimMemory(arg0);
-          JRubyAdapter.callMethod(callbackProcs[CB_TRIM_MEMORY], "call" , arg0);
-        } else {
-          super.onTrimMemory(arg0);
         }
       }
     }
