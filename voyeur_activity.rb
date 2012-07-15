@@ -22,6 +22,7 @@ require 'ruboto/generate'
 ruboto_import_widgets :TextView, :LinearLayout, :Button
 java_import 'android.app.Activity'
 java_import 'android.content.Intent'
+java_import 'android.content.pm.ActivityInfo'
 java_import 'android.os.Bundle'
 java_import 'android.util.Log'
 java_import 'android.view.View'
@@ -200,12 +201,20 @@ class RubotoActivity
   def self.edit(context)
     context.start_ruboto_activity("$activity_edit") do
       def on_create(bundle)
+ 
+        # due to bug in ruboto activity or something this doesn't work.
+        # TODO: would like to fix orientation problem in Edit Activity
+        #if self.getRequestedOrientation == ActivityInfo::SCREEN_ORIENTATION_UNSPECIFIED
+        #  self.setRequestedOrientation(ActivityInfo::SCREEN_ORIENTATION_PORTRAIT)
+        #else
+        #  self.setRequestedOrientation(self.getRequestedOrientation)
+        #end
+
         setTitle 'Edit'
         Log.i("VOYEUR", "EDIT ACTIVITY STARTING")
         setContentView(linear_layout(:orientation => :vertical) do
           linear_layout do
-            #text_view :text => "hellotext"
-            button :text => "Menu", :on_click_listener => @handle_click_menu
+            #button :text => "Menu", :on_click_listener => @handle_click_menu
             button :text => "Undo All", :on_click_listener => @handle_click_undo
             button :text => "Save", :on_click_listener => @handle_click_save
             button :text => "Face", :on_click_listener => @handle_click_face
@@ -226,9 +235,11 @@ class RubotoActivity
         outStream.close
         toast "saved."
       end
-      @handle_click_menu = proc do |view|
-        RubotoActivity.launch(self)
-      end
+      # This caused bug in orientation stuff.
+      #@handle_click_menu = proc do |view|
+      #  #self.setRequestedOrientation(ActivityInfo::SCREEN_ORIENTATION_USER)
+      #  RubotoActivity.launch(self)
+      #end
       @handle_click_face = proc do |view|
         unless @touch_listener.draw_over_faces
           toast "no face detected."
@@ -246,8 +257,8 @@ class RubotoActivity
   def self.launch(context)
     context.start_ruboto_activity("$activity_voyeur") do
       def on_create(bundle)
-        Debug.startMethodTracing("voyeurtrace")
-        Debug.startAllocCounting
+        #Debug.startMethodTracing("voyeurtrace")
+        #Debug.startAllocCounting
         setTitle 'Voyeur'
         setContentView(
           linear_layout(:orientation => :vertical) do
