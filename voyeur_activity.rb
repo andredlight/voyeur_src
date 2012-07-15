@@ -49,17 +49,20 @@ ruboto_import_widget :SurfaceView, "android.view"
 
 module SurfaceDraw
   def draw_on_surface(holder, point, color)
-    @surface = holder.getSurface
-    @surface_frame = holder.getSurfaceFrame
-    @canvas = @surface.lockCanvas(@surface_frame)
+    setup_draw(holder)
     @canvas.drawCircle(point[0], point[1], 5.0, color)
-    @surface.unlockCanvasAndPost(@canvas)
+    end_draw
   end
 
   def setup_draw(holder)
+    Log.i("VOYEUR", "setup_draw called with holder: #{holder}")
     @surface = holder.getSurface
+    Log.i("VOYEUR", "surface was #{@surface.inspect}")
     @surface_frame = holder.getSurfaceFrame
-    @canvas = @surface.lockCanvas(@surface_frame)
+    holder.synchronized do 
+      @canvas = holder.lockCanvas(nil)
+    end
+    Log.i("VOYEUR", "lockCanvas returned #{@canvas.inspect}")
   end
 
   def end_draw
@@ -70,10 +73,20 @@ end
 # The callbacks for the Edit View
 class RubotoSurfaceHolderCallback
   include SurfaceDraw
-  attr_accessor :point_collection
+  attr_accessor :drawing_cache_bitmap, :alt_canvas
 
-  def surfaceCreated(holder)
-    Log.i("VOYEUR", "surfaceCreate called")
+  def onTouch(view, event)
+    x = event.getX
+    y = event.getY
+    point = [x,y]
+    color = Paint.new(Paint::ANTI_ALIAS_FLAG)
+    color.setStyle(Paint::Style::FILL)
+    color.setColor(Color::GRAY)
+    draw_on_surface(view.getHolder, point, color)
+    true
+  end
+
+  def mainloop(holder)
     setup_draw(holder)
     @mBitmap ||= BitmapFactory.decodeFile("/sdcard/123.jpg")
     @num_faces ||= 1
@@ -82,8 +95,13 @@ class RubotoSurfaceHolderCallback
     @eyesDistance ||= Array.new
     @picWidth ||= @mBitmap.getWidth.to_f
     @picHeight ||= @mBitmap.getHeight.to_f
+
     @viewWidth = @surface_frame.width
     @viewHeight = @surface_frame.height
+
+    @drawing_cache_bitmap ||= Bitmap.createBitmap(@viewWidth, @viewHeight, Bitmap::Config::ARGB_8888)
+    @alt_canvas ||= Canvas.new(@drawing_cache_bitmap)
+
     @xRatio = @viewWidth / @picWidth
     @yRatio = @viewHeight / @picHeight
     @pInnerBullsEye ||= Paint.new(Paint::ANTI_ALIAS_FLAG)
@@ -112,12 +130,13 @@ class RubotoSurfaceHolderCallback
     @tmpPaint = Paint.new(Paint::ANTI_ALIAS_FLAG)
     @tmpPaint.setStyle(Paint::Style::STROKE)
     @tmpPaint.setTextAlign(Paint::Align::CENTER)
+    @alt_canvas.drawBitmap(@mBitmap, nil, Rect.new(0,0, @viewWidth, @viewHeight), @tmpPaint)
     @canvas.drawBitmap(@mBitmap, nil, Rect.new(0,0, @viewWidth, @viewHeight), @tmpPaint)
-    
     @the_eyes.each do |face|
       #canvas.drawCircle(face[:midpoint].x * xRatio, face[:midpoint].y * yRatio, face[:eye_distance].to_f, pInnerBullsEye);
       #canvas.drawCircle(face[:midpoint].x * xRatio, face[:midpoint].y * yRatio, face[:eye_distance].to_f / 2, pOuterBullsEye);
       #canvas.drawCircle(face[:midpoint].x * xRatio, face[:midpoint].y * yRatio, face[:eye_distance].to_f / 3, pOuterBullsEye);
+      @alt_canvas.drawCircle(face[:midpoint].x * @xRatio, face[:midpoint].y * @yRatio, face[:eye_distance].to_f / 4, @pInnerBullsEye);
       @canvas.drawCircle(face[:midpoint].x * @xRatio, face[:midpoint].y * @yRatio, face[:eye_distance].to_f / 4, @pInnerBullsEye);
       #canvas.drawCircle(face[:midpoint].x * xRatio, face[:midpoint].y * yRatio, face[:eye_distance].to_f * 1.2, pOuterBullsEye);
       #canvas.drawCircle(face[:midpoint].x * xRatio, face[:midpoint].y * yRatio, face[:eye_distance].to_f * 1.3, pOuterBullsEye);
@@ -126,8 +145,13 @@ class RubotoSurfaceHolderCallback
     end
 
     end_draw
-    Log.i("VOYEUR", "canvas unlocked")
     true
+  end
+
+
+  def surfaceCreated(holder)
+    Log.i("VOYEUR", "surfaceCreate called")
+    mainloop(holder)
   end
 
   def surfaceChanged(holder, format, width, height)
@@ -141,10 +165,13 @@ end
 
 class OnTouchListener
   include SurfaceDraw
+  attr_accessor :point_collection
   def onTouch(view, event)
+    @point_collection ||= []
     x = event.getX
     y = event.getY
     point = [x,y]
+    @point_collection << point
     color = Paint.new(Paint::ANTI_ALIAS_FLAG)
     color.setStyle(Paint::Style::FILL)
     color.setColor(Color::GRAY)
@@ -166,19 +193,23 @@ class RubotoActivity
             button :text => "Save", :on_click_listener => @handle_click_save
           end
           @sv = surface_view
-          @sv.setOnTouchListener OnTouchListener.new  
-          @sv.setDrawingCacheEnabled(true)
-          @sv.holder.add_callback RubotoSurfaceHolderCallback.new
-          # Deprecated, but still required for older API version
-          @sv.holder.set_type android.view.SurfaceHolder::SURFACE_TYPE_PUSH_BUFFERS
+          @callback = RubotoSurfaceHolderCallback.new
+          @touch_listener = OnTouchListener.new
+          @sv.holder.add_callback @callback
+          @sv.setOnTouchListener @touch_listener
         end)
       end
       @handle_click_save = proc do |view|
         Log.i("VOYEUR", "GONNA SAVE THAT")
-        savethis = @sv.getDrawingCache
         savefile = JFile.new("/sdcard/123save.jpg")
         outStream = FileOutputStream.new(savefile)
-        savethis.compress(Bitmap::CompressFormat::JPEG, 100, outStream);
+        color = Paint.new(Paint::ANTI_ALIAS_FLAG)
+        color.setStyle(Paint::Style::FILL)
+        color.setColor(Color::GRAY)
+        @touch_listener.point_collection.each do |point|
+          @callback.alt_canvas.drawCircle(point[0], point[1], 5.0, color)
+        end
+        @callback.drawing_cache_bitmap.compress(Bitmap::CompressFormat::JPEG, 100, outStream);
         outStream.flush
         outStream.close
       end
