@@ -56,9 +56,20 @@ module SurfaceDraw
 
   def setup_draw(holder)
     Log.i("VOYEUR", "setup_draw called with holder: #{holder}")
+    
     @surface = holder.getSurface
     Log.i("VOYEUR", "surface was #{@surface.inspect}")
+
     @surface_frame = holder.getSurfaceFrame
+
+    @mBitmap ||= BitmapFactory.decodeFile("/sdcard/123.jpg")
+
+    @viewWidth = @surface_frame.width
+    @viewHeight = @surface_frame.height
+
+    @drawing_cache_bitmap ||= Bitmap.createBitmap(@viewWidth, @viewHeight, Bitmap::Config::ARGB_8888)
+    @alt_canvas ||= Canvas.new(@drawing_cache_bitmap)
+
     holder.synchronized do 
       @canvas = holder.lockCanvas(nil)
     end
@@ -68,27 +79,9 @@ module SurfaceDraw
   def end_draw
     @surface.unlockCanvasAndPost(@canvas)
   end
-end
 
-# The callbacks for the Edit View
-class RubotoSurfaceHolderCallback
-  include SurfaceDraw
-  attr_accessor :drawing_cache_bitmap, :alt_canvas
-
-  def onTouch(view, event)
-    x = event.getX
-    y = event.getY
-    point = [x,y]
-    color = Paint.new(Paint::ANTI_ALIAS_FLAG)
-    color.setStyle(Paint::Style::FILL)
-    color.setColor(Color::GRAY)
-    draw_on_surface(view.getHolder, point, color)
-    true
-  end
-
-  def mainloop(holder)
-    setup_draw(holder)
-    @mBitmap ||= BitmapFactory.decodeFile("/sdcard/123.jpg")
+  def draw_over_face
+    @already_run = true
     @num_faces ||= 1
     @getAllFaces ||= FaceDetector::Face[@num_faces].new
     @eyesMidPts = Array.new
@@ -98,9 +91,6 @@ class RubotoSurfaceHolderCallback
 
     @viewWidth = @surface_frame.width
     @viewHeight = @surface_frame.height
-
-    @drawing_cache_bitmap ||= Bitmap.createBitmap(@viewWidth, @viewHeight, Bitmap::Config::ARGB_8888)
-    @alt_canvas ||= Canvas.new(@drawing_cache_bitmap)
 
     @xRatio = @viewWidth / @picWidth
     @yRatio = @viewHeight / @picHeight
@@ -131,27 +121,40 @@ class RubotoSurfaceHolderCallback
     @tmpPaint.setStyle(Paint::Style::STROKE)
     @tmpPaint.setTextAlign(Paint::Align::CENTER)
     @alt_canvas.drawBitmap(@mBitmap, nil, Rect.new(0,0, @viewWidth, @viewHeight), @tmpPaint)
-    @canvas.drawBitmap(@mBitmap, nil, Rect.new(0,0, @viewWidth, @viewHeight), @tmpPaint)
     @the_eyes.each do |face|
       #canvas.drawCircle(face[:midpoint].x * xRatio, face[:midpoint].y * yRatio, face[:eye_distance].to_f, pInnerBullsEye);
       #canvas.drawCircle(face[:midpoint].x * xRatio, face[:midpoint].y * yRatio, face[:eye_distance].to_f / 2, pOuterBullsEye);
       #canvas.drawCircle(face[:midpoint].x * xRatio, face[:midpoint].y * yRatio, face[:eye_distance].to_f / 3, pOuterBullsEye);
       @alt_canvas.drawCircle(face[:midpoint].x * @xRatio, face[:midpoint].y * @yRatio, face[:eye_distance].to_f / 4, @pInnerBullsEye);
-      @canvas.drawCircle(face[:midpoint].x * @xRatio, face[:midpoint].y * @yRatio, face[:eye_distance].to_f / 4, @pInnerBullsEye);
       #canvas.drawCircle(face[:midpoint].x * xRatio, face[:midpoint].y * yRatio, face[:eye_distance].to_f * 1.2, pOuterBullsEye);
       #canvas.drawCircle(face[:midpoint].x * xRatio, face[:midpoint].y * yRatio, face[:eye_distance].to_f * 1.3, pOuterBullsEye);
       #canvas.drawCircle(face[:midpoint].x * xRatio, face[:midpoint].y * yRatio, face[:eye_distance].to_f * 1.4, pOuterBullsEye);
       #canvas.drawCircle(face[:midpoint].x * xRatio, face[:midpoint].y * yRatio, face[:eye_distance].to_f * 1.5, pOuterBullsEye);
     end
 
+  end
+end
+
+# The callbacks for the Edit View
+class RubotoSurfaceHolderCallback
+  include SurfaceDraw
+  attr_accessor :drawing_cache_bitmap, :alt_canvas
+
+  def mainloop(holder)
+    setup_draw(holder)
+    draw_over_face
     end_draw
     true
   end
 
+  def set_touch_listener(tl)
+    @touch_listener = tl
+  end
 
   def surfaceCreated(holder)
     Log.i("VOYEUR", "surfaceCreate called")
     mainloop(holder)
+    true
   end
 
   def surfaceChanged(holder, format, width, height)
@@ -165,17 +168,24 @@ end
 
 class OnTouchListener
   include SurfaceDraw
-  attr_accessor :point_collection
+  attr_accessor :drawing_cache_bitmap
   def onTouch(view, event)
-    @point_collection ||= []
+    Log.i("VOYEUR", "onTouch called")
     x = event.getX
     y = event.getY
     point = [x,y]
-    @point_collection << point
     color = Paint.new(Paint::ANTI_ALIAS_FLAG)
     color.setStyle(Paint::Style::FILL)
     color.setColor(Color::GRAY)
-    draw_on_surface(view.getHolder, point, color)
+    setup_draw(view.getHolder)
+    draw_over_face unless @already_run
+    @alt_canvas.drawCircle(point[0], point[1], 7.0, color)
+    @tmpPaint ||= Paint.new(Paint::ANTI_ALIAS_FLAG)
+    @tmpPaint.setStyle(Paint::Style::STROKE)
+    @tmpPaint.setTextAlign(Paint::Align::CENTER)
+    @canvas.drawBitmap(@drawing_cache_bitmap, nil, Rect.new(0,0, view.getWidth, view.getHeight), @tmpPaint) 
+    end_draw
+    Log.i("VOYEUR", "onTouch draw complete")
     true
   end
 end
@@ -193,8 +203,9 @@ class RubotoActivity
             button :text => "Save", :on_click_listener => @handle_click_save
           end
           @sv = surface_view
-          @callback = RubotoSurfaceHolderCallback.new
-          @touch_listener = OnTouchListener.new
+          @callback ||= RubotoSurfaceHolderCallback.new
+          @touch_listener ||= OnTouchListener.new
+          @callback.set_touch_listener(@touch_listener)
           @sv.holder.add_callback @callback
           @sv.setOnTouchListener @touch_listener
         end)
@@ -203,13 +214,7 @@ class RubotoActivity
         Log.i("VOYEUR", "GONNA SAVE THAT")
         savefile = JFile.new("/sdcard/123save.jpg")
         outStream = FileOutputStream.new(savefile)
-        color = Paint.new(Paint::ANTI_ALIAS_FLAG)
-        color.setStyle(Paint::Style::FILL)
-        color.setColor(Color::GRAY)
-        @touch_listener.point_collection.each do |point|
-          @callback.alt_canvas.drawCircle(point[0], point[1], 5.0, color)
-        end
-        @callback.drawing_cache_bitmap.compress(Bitmap::CompressFormat::JPEG, 100, outStream);
+        @touch_listener.drawing_cache_bitmap.compress(Bitmap::CompressFormat::JPEG, 100, outStream);
         outStream.flush
         outStream.close
       end
