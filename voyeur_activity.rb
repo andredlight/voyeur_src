@@ -82,13 +82,14 @@ module SurfaceDraw
   def init_drawing(holder=nil)
     @holder = holder if holder
     setup_draw(@holder)
-    #detect_faces
     @alt_canvas.drawBitmap(@mBitmap, nil, Rect.new(0,0, @viewWidth, @viewHeight), @tmpPaint)
     flush_to_canvas
     end_draw
   end
 
   def undo_all
+    @mBitmap.recycle
+    @mBitmap = nil
     init_drawing
   end
 
