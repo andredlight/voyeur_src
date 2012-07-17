@@ -129,8 +129,6 @@ module SurfaceDraw
     tmpPaint = Paint.new(Paint::ANTI_ALIAS_FLAG)
     tmpPaint.setStyle(Paint::Style::STROKE)
     tmpPaint.setTextAlign(Paint::Align::CENTER)
-    @alt_canvas.drawBitmap(@mBitmap, nil, Rect.new(0,0, viewWidth, viewHeight), tmpPaint)
-
     color = Paint.new(Paint::ANTI_ALIAS_FLAG)
     color.setStyle(Paint::Style::FILL)
     color.setColor(Color::GRAY)
